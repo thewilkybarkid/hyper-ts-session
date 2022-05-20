@@ -1,0 +1,16 @@
+{
+  "name": "hyper-ts-session",
+  "description": "hyper-ts middleware for sessions.",
+  "version": "0.1.0",
+  "license": "MIT",
+  "homepage": "https://github.com/thewilkybarkid/hyper-ts-session",
+  "repository": "github:thewilkybarkid/hyper-ts-session",
+  "devDependencies": {
+    "@commitlint/cli": "^17.0.0",
+    "@commitlint/config-conventional": "^17.0.0",
+    "husky": "^8.0.1"
+  },
+  "scripts": {
+    "prepare": "which husky && husky install || true"
+  }
+}
