@@ -5,10 +5,11 @@ import cookie from 'cookie'
 import * as E from 'fp-ts/Either'
 import * as J from 'fp-ts/Json'
 import * as O from 'fp-ts/Option'
+import * as RT from 'fp-ts/ReaderTask'
 import * as r from 'fp-ts/Record'
 import * as TE from 'fp-ts/TaskEither'
 import { constVoid, flow, pipe } from 'fp-ts/function'
-import { StatusOpen } from 'hyper-ts'
+import { HeadersOpen, StatusOpen } from 'hyper-ts'
 import * as M from 'hyper-ts/lib/Middleware'
 import * as RM from 'hyper-ts/lib/ReaderMiddleware'
 import * as D from 'io-ts/Decoder'
@@ -18,6 +19,7 @@ import * as UUID from 'uuid-ts'
 import JsonRecord = J.JsonRecord
 import Middleware = M.Middleware
 import ReaderMiddleware = RM.ReaderMiddleware
+import ReaderTask = RT.ReaderTask
 import Uuid = UUID.Uuid
 
 // -------------------------------------------------------------------------------------
@@ -60,6 +62,20 @@ export function getSession<I = StatusOpen>(): ReaderMiddleware<SessionEnv, I, I,
   )
 }
 
+/**
+ * Returns a middleware that stores a value in a session.
+ *
+ * @category constructors
+ * @since 0.1.0
+ */
+export function storeSession(session: JsonRecord): ReaderMiddleware<SessionEnv, HeadersOpen, HeadersOpen, never, void> {
+  return pipe(
+    RM.fromMiddleware(currentSessionId<HeadersOpen>()),
+    RM.orElseMiddlewareK(newSession),
+    RM.chainReaderTaskK(saveSession(session)),
+  )
+}
+
 // -------------------------------------------------------------------------------------
 // utils
 // -------------------------------------------------------------------------------------
@@ -70,6 +86,23 @@ function currentSessionId<I = StatusOpen>(): Middleware<I, I, 'no-session', Uuid
     M.filterOrElse(UUID.isUuid, () => 'no-session'),
     M.mapLeft(() => 'no-session'),
   )
+}
+
+function newSession(): Middleware<HeadersOpen, HeadersOpen, never, Uuid> {
+  return pipe(
+    M.rightIO<HeadersOpen, never, Uuid>(UUID.v4()),
+    M.chainFirst(sessionId => M.cookie('session', sessionId, {})),
+  )
+}
+
+function saveSession(session: JsonRecord): (key: Uuid) => ReaderTask<SessionEnv, void> {
+  return key =>
+    flow(
+      TE.tryCatchK(async ({ sessionStore }: SessionEnv) => {
+        await sessionStore.set(key, session)
+      }, constVoid),
+      TE.toUnion,
+    )
 }
 
 function getCookie<I = StatusOpen>(name: string): Middleware<I, I, 'no-cookie', string> {

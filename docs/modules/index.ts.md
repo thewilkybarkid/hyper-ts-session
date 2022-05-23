@@ -14,6 +14,7 @@ Added in v0.1.0
 
 - [constructors](#constructors)
   - [getSession](#getsession)
+  - [storeSession](#storesession)
 - [model](#model)
   - [SessionEnv (interface)](#sessionenv-interface)
 
@@ -29,6 +30,20 @@ Returns a middleware that returns the current session.
 
 ```ts
 export declare function getSession<I = StatusOpen>(): ReaderMiddleware<SessionEnv, I, I, 'no-session', JsonRecord>
+```
+
+Added in v0.1.0
+
+## storeSession
+
+Returns a middleware that stores a value in a session.
+
+**Signature**
+
+```ts
+export declare function storeSession(
+  session: JsonRecord
+): ReaderMiddleware<SessionEnv, HeadersOpen, HeadersOpen, never, void>
 ```
 
 Added in v0.1.0

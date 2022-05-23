@@ -9,6 +9,7 @@ import ReaderMiddleware = RM.ReaderMiddleware
 import SessionEnv = _.SessionEnv
 
 declare const sessionEnv: SessionEnv
+declare const jsonRecord: JsonRecord
 
 //
 // SessionEnv
@@ -25,4 +26,12 @@ expectTypeOf(_.getSession()).toMatchTypeOf<
 >()
 expectTypeOf(_.getSession<HeadersOpen>()).toMatchTypeOf<
   ReaderMiddleware<SessionEnv, HeadersOpen, HeadersOpen, 'no-session', JsonRecord>
+>()
+
+//
+// storeSession
+//
+
+expectTypeOf(_.storeSession(jsonRecord)).toMatchTypeOf<
+  ReaderMiddleware<SessionEnv, HeadersOpen, HeadersOpen, never, void>
 >()
