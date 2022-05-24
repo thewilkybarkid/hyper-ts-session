@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.1](https://github.com/thewilkybarkid/hyper-ts-session/compare/v0.1.0...v0.1.1) (2022-05-24)
+
+
+### Features
+
+* sign the session cookie ([1aaf863](https://github.com/thewilkybarkid/hyper-ts-session/commit/1aaf863a9c71fb85dd6cde41d3ef8352fc9e8dd7))
+
+
+### Bug Fixes
+
+* prevent client-side scripts from reading the cookie ([94c643f](https://github.com/thewilkybarkid/hyper-ts-session/commit/94c643f5766b6e46391fb4822de8963c1509bc06))
+
 ## 0.1.0 (2022-05-23)
 
 
