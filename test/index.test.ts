@@ -135,7 +135,9 @@ describe('hyper-ts-session', () => {
                     type: 'setCookie',
                     name: 'session',
                     value: spy.mock.calls[0][0],
-                    options: {},
+                    options: {
+                      httpOnly: true,
+                    },
                   },
                 ]),
               )

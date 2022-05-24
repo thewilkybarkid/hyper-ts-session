@@ -91,7 +91,11 @@ function currentSessionId<I = StatusOpen>(): Middleware<I, I, 'no-session', Uuid
 function newSession(): Middleware<HeadersOpen, HeadersOpen, never, Uuid> {
   return pipe(
     M.rightIO<HeadersOpen, never, Uuid>(UUID.v4()),
-    M.chainFirst(sessionId => M.cookie('session', sessionId, {})),
+    M.chainFirst(sessionId =>
+      M.cookie('session', sessionId, {
+        httpOnly: true,
+      }),
+    ),
   )
 }
 
