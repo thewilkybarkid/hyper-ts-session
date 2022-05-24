@@ -2,6 +2,7 @@
  * @since 0.1.0
  */
 import cookie from 'cookie'
+import cookieSignature from 'cookie-signature'
 import * as E from 'fp-ts/Either'
 import * as J from 'fp-ts/Json'
 import * as O from 'fp-ts/Option'
@@ -31,6 +32,7 @@ import Uuid = UUID.Uuid
  * @since 0.1.0
  */
 export interface SessionEnv {
+  secret: string
   sessionStore: Store<JsonRecord>
 }
 
@@ -47,16 +49,16 @@ export interface SessionEnv {
 export function getSession<I = StatusOpen>(): ReaderMiddleware<SessionEnv, I, I, 'no-session', JsonRecord> {
   return pipe(
     RM.ask<SessionEnv, I>(),
-    RM.chainMiddlewareK(({ sessionStore }) =>
+    RM.chain(({ sessionStore }) =>
       pipe(
         currentSessionId<I>(),
-        M.chainTaskEitherKW(
+        RM.chainTaskEitherKW(
           flow(
             TE.tryCatchK(async key => await sessionStore.get(key), constVoid),
             TE.chainOptionK(constVoid)(O.fromNullable),
           ),
         ),
-        M.mapLeft(() => 'no-session'),
+        RM.mapLeft(() => 'no-session'),
       ),
     ),
   )
@@ -69,32 +71,39 @@ export function getSession<I = StatusOpen>(): ReaderMiddleware<SessionEnv, I, I,
  * @since 0.1.0
  */
 export function storeSession(session: JsonRecord): ReaderMiddleware<SessionEnv, HeadersOpen, HeadersOpen, never, void> {
-  return pipe(
-    RM.fromMiddleware(currentSessionId<HeadersOpen>()),
-    RM.orElseMiddlewareK(newSession),
-    RM.chainReaderTaskK(saveSession(session)),
-  )
+  return pipe(currentSessionId<HeadersOpen>(), RM.orElse(newSession), RM.chainReaderTaskK(saveSession(session)))
 }
 
 // -------------------------------------------------------------------------------------
 // utils
 // -------------------------------------------------------------------------------------
 
-function currentSessionId<I = StatusOpen>(): Middleware<I, I, 'no-session', Uuid> {
+function currentSessionId<I = StatusOpen>(): ReaderMiddleware<SessionEnv, I, I, 'no-session', Uuid> {
   return pipe(
-    getCookie<I>('session'),
-    M.filterOrElse(UUID.isUuid, () => 'no-session'),
-    M.mapLeft(() => 'no-session'),
+    RM.ask<SessionEnv, I>(),
+    RM.chainMiddlewareK(({ secret }) =>
+      pipe(
+        getCookie<I>('session'),
+        M.chainEitherKW(E.fromNullableK(() => 'no-session')(value => cookieSignature.unsign(value, secret) || null)),
+        M.filterOrElseW(UUID.isUuid, () => 'no-session'),
+        M.mapLeft(() => 'no-session'),
+      ),
+    ),
   )
 }
 
-function newSession(): Middleware<HeadersOpen, HeadersOpen, never, Uuid> {
+function newSession(): ReaderMiddleware<SessionEnv, HeadersOpen, HeadersOpen, never, Uuid> {
   return pipe(
-    M.rightIO<HeadersOpen, never, Uuid>(UUID.v4()),
-    M.chainFirst(sessionId =>
-      M.cookie('session', sessionId, {
-        httpOnly: true,
-      }),
+    RM.ask<SessionEnv, HeadersOpen>(),
+    RM.chainMiddlewareK(({ secret }) =>
+      pipe(
+        M.rightIO<HeadersOpen, never, Uuid>(UUID.v4()),
+        M.chainFirst(sessionId =>
+          M.cookie('session', cookieSignature.sign(sessionId, secret), {
+            httpOnly: true,
+          }),
+        ),
+      ),
     ),
   )
 }
