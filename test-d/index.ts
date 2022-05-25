@@ -35,3 +35,9 @@ expectTypeOf(_.getSession<HeadersOpen>()).toMatchTypeOf<
 expectTypeOf(_.storeSession(jsonRecord)).toMatchTypeOf<
   ReaderMiddleware<SessionEnv, HeadersOpen, HeadersOpen, never, void>
 >()
+
+//
+// endSession
+//
+
+expectTypeOf(_.endSession()).toMatchTypeOf<ReaderMiddleware<SessionEnv, HeadersOpen, HeadersOpen, never, void>>()

@@ -13,6 +13,7 @@ Added in v0.1.0
 <h2 class="text-delta">Table of contents</h2>
 
 - [constructors](#constructors)
+  - [endSession](#endsession)
   - [getSession](#getsession)
   - [storeSession](#storesession)
 - [model](#model)
@@ -21,6 +22,18 @@ Added in v0.1.0
 ---
 
 # constructors
+
+## endSession
+
+Returns a middleware that ends the current session.
+
+**Signature**
+
+```ts
+export declare function endSession(): ReaderMiddleware<SessionEnv, HeadersOpen, HeadersOpen, never, void>
+```
+
+Added in v0.1.2
 
 ## getSession
 

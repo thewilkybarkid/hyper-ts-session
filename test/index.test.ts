@@ -153,5 +153,55 @@ describe('hyper-ts-session', () => {
         )
       })
     })
+
+    describe('endSession', () => {
+      test('when there is a session already', async () => {
+        await fc.assert(
+          fc.asyncProperty(
+            fc.tuple(fc.string(), fc.uuid()).chain(([secret, sessionId]) =>
+              fc.tuple(
+                fc.constant(secret),
+                fc.connection<HeadersOpen>({
+                  headers: fc.constant({ Cookie: `session=${cookieSignature.sign(sessionId, secret)}` }),
+                }),
+                fc.constant(sessionId),
+                fc.dictionary(fc.lorem(), fc.lorem()),
+              ),
+            ),
+            async ([secret, connection, sessionId, value]) => {
+              const sessionStore = new Keyv()
+              await sessionStore.set(sessionId, value)
+
+              const actual = await runMiddleware(_.endSession()({ secret, sessionStore }), connection)()
+
+              expect(await sessionStore.has(sessionId)).toStrictEqual(false)
+              expect(actual).toStrictEqual(
+                E.right([
+                  {
+                    type: 'clearCookie',
+                    name: 'session',
+                    options: {
+                      httpOnly: true,
+                    },
+                  },
+                ]),
+              )
+            },
+          ),
+        )
+      })
+
+      test("when there isn't a session already", async () => {
+        await fc.assert(
+          fc.asyncProperty(fc.string(), fc.connection<HeadersOpen>(), async (secret, connection) => {
+            const sessionStore = new Keyv()
+
+            const actual = await runMiddleware(_.endSession()({ secret, sessionStore }), connection)()
+
+            expect(actual).toStrictEqual(E.right([]))
+          }),
+        )
+      })
+    })
   })
 })

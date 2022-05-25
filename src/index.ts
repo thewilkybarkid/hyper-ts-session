@@ -74,6 +74,23 @@ export function storeSession(session: JsonRecord): ReaderMiddleware<SessionEnv, 
   return pipe(currentSessionId<HeadersOpen>(), RM.orElse(newSession), RM.chainReaderTaskK(saveSession(session)))
 }
 
+/**
+ * Returns a middleware that ends the current session.
+ *
+ * @category constructors
+ * @since 0.1.2
+ */
+export function endSession(): ReaderMiddleware<SessionEnv, HeadersOpen, HeadersOpen, never, void> {
+  return pipe(
+    RM.clearCookie('session', {
+      httpOnly: true,
+    }),
+    RM.chain(() => currentSessionId<HeadersOpen>()),
+    RM.chainReaderTaskK(deleteSession),
+    RM.orElseW(() => RM.right(undefined)),
+  )
+}
+
 // -------------------------------------------------------------------------------------
 // utils
 // -------------------------------------------------------------------------------------
@@ -116,6 +133,15 @@ function saveSession(session: JsonRecord): (key: Uuid) => ReaderTask<SessionEnv,
       }, constVoid),
       TE.toUnion,
     )
+}
+
+function deleteSession(key: Uuid): ReaderTask<SessionEnv, void> {
+  return flow(
+    TE.tryCatchK(async ({ sessionStore }: SessionEnv) => {
+      await sessionStore.delete(key)
+    }, constVoid),
+    TE.toUnion,
+  )
 }
 
 function getCookie<I = StatusOpen>(name: string): Middleware<I, I, 'no-cookie', string> {
