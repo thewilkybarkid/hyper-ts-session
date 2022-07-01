@@ -70,7 +70,7 @@ Added in v0.1.0
 ```ts
 export interface SessionEnv {
   secret: string
-  sessionStore: Store<JsonRecord>
+  sessionStore: Keyv<JsonRecord>
 }
 ```
 

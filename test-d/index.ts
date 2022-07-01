@@ -2,7 +2,7 @@ import { expectTypeOf } from 'expect-type'
 import { JsonRecord } from 'fp-ts/Json'
 import { HeadersOpen, StatusOpen } from 'hyper-ts'
 import * as RM from 'hyper-ts/lib/ReaderMiddleware'
-import { Store } from 'keyv'
+import Keyv from 'keyv'
 import * as _ from '../src'
 
 import ReaderMiddleware = RM.ReaderMiddleware
@@ -15,7 +15,7 @@ declare const jsonRecord: JsonRecord
 // SessionEnv
 //
 
-expectTypeOf(sessionEnv.sessionStore).toEqualTypeOf<Store<JsonRecord>>()
+expectTypeOf(sessionEnv.sessionStore).toEqualTypeOf<Keyv<JsonRecord>>()
 
 //
 // getSession

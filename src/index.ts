@@ -14,7 +14,7 @@ import { HeadersOpen, StatusOpen } from 'hyper-ts'
 import * as M from 'hyper-ts/lib/Middleware'
 import * as RM from 'hyper-ts/lib/ReaderMiddleware'
 import * as D from 'io-ts/Decoder'
-import { Store } from 'keyv'
+import Keyv from 'keyv'
 import * as UUID from 'uuid-ts'
 
 import JsonRecord = J.JsonRecord
@@ -33,7 +33,7 @@ import Uuid = UUID.Uuid
  */
 export interface SessionEnv {
   secret: string
-  sessionStore: Store<JsonRecord>
+  sessionStore: Keyv<JsonRecord>
 }
 
 // -------------------------------------------------------------------------------------
