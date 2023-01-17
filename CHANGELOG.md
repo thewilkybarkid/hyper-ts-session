@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.2.0](https://github.com/thewilkybarkid/hyper-ts-session/compare/v0.1.3...v0.2.0) (2023-01-17)
+
+
+### Features
+
+* don't swallow Keyv errors ([7a5b508](https://github.com/thewilkybarkid/hyper-ts-session/commit/7a5b508f8b6099b8d2d12bc6b5c0c3f605c9339a))
+
 ### [0.1.3](https://github.com/thewilkybarkid/hyper-ts-session/compare/v0.1.2...v0.1.3) (2022-07-01)
 
 
