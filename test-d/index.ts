@@ -22,10 +22,10 @@ expectTypeOf(sessionEnv.sessionStore).toEqualTypeOf<Keyv<JsonRecord>>()
 //
 
 expectTypeOf(_.getSession()).toMatchTypeOf<
-  ReaderMiddleware<SessionEnv, StatusOpen, StatusOpen, 'no-session', JsonRecord>
+  ReaderMiddleware<SessionEnv, StatusOpen, StatusOpen, 'no-session' | Error, JsonRecord>
 >()
 expectTypeOf(_.getSession<HeadersOpen>()).toMatchTypeOf<
-  ReaderMiddleware<SessionEnv, HeadersOpen, HeadersOpen, 'no-session', JsonRecord>
+  ReaderMiddleware<SessionEnv, HeadersOpen, HeadersOpen, 'no-session' | Error, JsonRecord>
 >()
 
 //
@@ -33,11 +33,11 @@ expectTypeOf(_.getSession<HeadersOpen>()).toMatchTypeOf<
 //
 
 expectTypeOf(_.storeSession(jsonRecord)).toMatchTypeOf<
-  ReaderMiddleware<SessionEnv, HeadersOpen, HeadersOpen, never, void>
+  ReaderMiddleware<SessionEnv, HeadersOpen, HeadersOpen, Error, void>
 >()
 
 //
 // endSession
 //
 
-expectTypeOf(_.endSession()).toMatchTypeOf<ReaderMiddleware<SessionEnv, HeadersOpen, HeadersOpen, never, void>>()
+expectTypeOf(_.endSession()).toMatchTypeOf<ReaderMiddleware<SessionEnv, HeadersOpen, HeadersOpen, Error, void>>()

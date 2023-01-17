@@ -5,11 +5,10 @@ import cookie from 'cookie'
 import cookieSignature from 'cookie-signature'
 import * as E from 'fp-ts/Either'
 import * as J from 'fp-ts/Json'
-import * as O from 'fp-ts/Option'
-import * as RT from 'fp-ts/ReaderTask'
+import * as RTE from 'fp-ts/ReaderTaskEither'
 import * as r from 'fp-ts/Record'
 import * as TE from 'fp-ts/TaskEither'
-import { constVoid, flow, pipe } from 'fp-ts/function'
+import { flow, pipe } from 'fp-ts/function'
 import { HeadersOpen, StatusOpen } from 'hyper-ts'
 import * as M from 'hyper-ts/lib/Middleware'
 import * as RM from 'hyper-ts/lib/ReaderMiddleware'
@@ -20,7 +19,7 @@ import * as UUID from 'uuid-ts'
 import JsonRecord = J.JsonRecord
 import Middleware = M.Middleware
 import ReaderMiddleware = RM.ReaderMiddleware
-import ReaderTask = RT.ReaderTask
+import ReaderTaskEither = RTE.ReaderTaskEither
 import Uuid = UUID.Uuid
 
 // -------------------------------------------------------------------------------------
@@ -46,7 +45,7 @@ export interface SessionEnv {
  * @category constructors
  * @since 0.1.0
  */
-export function getSession<I = StatusOpen>(): ReaderMiddleware<SessionEnv, I, I, 'no-session', JsonRecord> {
+export function getSession<I = StatusOpen>(): ReaderMiddleware<SessionEnv, I, I, 'no-session' | Error, JsonRecord> {
   return pipe(
     RM.ask<SessionEnv, I>(),
     RM.chain(({ sessionStore }) =>
@@ -54,11 +53,10 @@ export function getSession<I = StatusOpen>(): ReaderMiddleware<SessionEnv, I, I,
         currentSessionId<I>(),
         RM.chainTaskEitherKW(
           flow(
-            TE.tryCatchK(async key => await sessionStore.get(key), constVoid),
-            TE.chainOptionK(constVoid)(O.fromNullable),
+            TE.tryCatchK(async key => await sessionStore.get(key), E.toError),
+            TE.chainEitherKW(E.fromNullable('no-session' as const)),
           ),
         ),
-        RM.mapLeft(() => 'no-session'),
       ),
     ),
   )
@@ -70,8 +68,8 @@ export function getSession<I = StatusOpen>(): ReaderMiddleware<SessionEnv, I, I,
  * @category constructors
  * @since 0.1.0
  */
-export function storeSession(session: JsonRecord): ReaderMiddleware<SessionEnv, HeadersOpen, HeadersOpen, never, void> {
-  return pipe(currentSessionId<HeadersOpen>(), RM.orElse(newSession), RM.chainReaderTaskK(saveSession(session)))
+export function storeSession(session: JsonRecord): ReaderMiddleware<SessionEnv, HeadersOpen, HeadersOpen, Error, void> {
+  return pipe(currentSessionId<HeadersOpen>(), RM.orElse(newSession), RM.chainReaderTaskEitherK(saveSession(session)))
 }
 
 /**
@@ -80,14 +78,14 @@ export function storeSession(session: JsonRecord): ReaderMiddleware<SessionEnv, 
  * @category constructors
  * @since 0.1.2
  */
-export function endSession(): ReaderMiddleware<SessionEnv, HeadersOpen, HeadersOpen, never, void> {
+export function endSession(): ReaderMiddleware<SessionEnv, HeadersOpen, HeadersOpen, Error, void> {
   return pipe(
     RM.clearCookie('session', {
       httpOnly: true,
     }),
     RM.chain(() => currentSessionId<HeadersOpen>()),
-    RM.chainReaderTaskK(deleteSession),
-    RM.orElseW(() => RM.right(undefined)),
+    RM.chainReaderTaskEitherKW(deleteSession),
+    RM.orElseW(error => (error === 'no-session' ? RM.right(undefined) : RM.left(error))),
   )
 }
 
@@ -125,23 +123,17 @@ function newSession(): ReaderMiddleware<SessionEnv, HeadersOpen, HeadersOpen, ne
   )
 }
 
-function saveSession(session: JsonRecord): (key: Uuid) => ReaderTask<SessionEnv, void> {
+function saveSession(session: JsonRecord): (key: Uuid) => ReaderTaskEither<SessionEnv, Error, void> {
   return key =>
-    flow(
-      TE.tryCatchK(async ({ sessionStore }: SessionEnv) => {
-        await sessionStore.set(key, session)
-      }, constVoid),
-      TE.toUnion,
-    )
+    TE.tryCatchK(async ({ sessionStore }: SessionEnv) => {
+      await sessionStore.set(key, session)
+    }, E.toError)
 }
 
-function deleteSession(key: Uuid): ReaderTask<SessionEnv, void> {
-  return flow(
-    TE.tryCatchK(async ({ sessionStore }: SessionEnv) => {
-      await sessionStore.delete(key)
-    }, constVoid),
-    TE.toUnion,
-  )
+function deleteSession(key: Uuid): ReaderTaskEither<SessionEnv, Error, void> {
+  return TE.tryCatchK(async ({ sessionStore }: SessionEnv) => {
+    await sessionStore.delete(key)
+  }, E.toError)
 }
 
 function getCookie<I = StatusOpen>(name: string): Middleware<I, I, 'no-cookie', string> {

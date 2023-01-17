@@ -1,8 +1,9 @@
 import cookieSignature from 'cookie-signature'
 import * as E from 'fp-ts/Either'
+import { JsonRecord } from 'fp-ts/Json'
 import { HeadersOpen } from 'hyper-ts'
 import * as M from 'hyper-ts/lib/Middleware'
-import Keyv from 'keyv'
+import Keyv, { Store } from 'keyv'
 import * as _ from '../src'
 import * as fc from './fc'
 import { runMiddleware } from './middleware'
@@ -93,6 +94,42 @@ describe('hyper-ts-session', () => {
           ),
         )
       })
+
+      test('when the session store errors', async () => {
+        await fc.assert(
+          fc.asyncProperty(
+            fc.tuple(fc.string(), fc.uuid()).chain(([secret, sessionId]) =>
+              fc.tuple(
+                fc.constant(secret),
+                fc.connection({
+                  headers: fc.constant({ Cookie: `session=${cookieSignature.sign(sessionId, secret)}` }),
+                }),
+              ),
+            ),
+            async ([secret, connection]) => {
+              const store: Store<JsonRecord> = {
+                get() {
+                  throw 'get'
+                },
+                set() {
+                  throw 'set'
+                },
+                clear() {
+                  throw 'clear'
+                },
+                delete() {
+                  throw 'delete'
+                },
+              }
+              const sessionStore = new Keyv({ store })
+
+              const actual = await M.evalMiddleware(_.getSession()({ secret, sessionStore }), connection)()
+
+              expect(actual).toStrictEqual(E.left(new Error('get')))
+            },
+          ),
+        )
+      })
     })
 
     describe('storeSession', () => {
@@ -152,6 +189,43 @@ describe('hyper-ts-session', () => {
           ),
         )
       })
+
+      test('when there the session store errors', async () => {
+        await fc.assert(
+          fc.asyncProperty(
+            fc.tuple(fc.string(), fc.uuid()).chain(([secret, sessionId]) =>
+              fc.tuple(
+                fc.constant(secret),
+                fc.connection<HeadersOpen>({
+                  headers: fc.constant({ Cookie: `session=${cookieSignature.sign(sessionId, secret)}` }),
+                }),
+                fc.dictionary(fc.lorem(), fc.lorem()),
+              ),
+            ),
+            async ([secret, connection, value]) => {
+              const store: Store<JsonRecord> = {
+                get() {
+                  throw 'get'
+                },
+                set() {
+                  throw 'set'
+                },
+                clear() {
+                  throw 'clear'
+                },
+                delete() {
+                  throw 'delete'
+                },
+              }
+              const sessionStore = new Keyv({ store })
+
+              const actual = await runMiddleware(_.storeSession(value)({ secret, sessionStore }), connection)()
+
+              expect(actual).toStrictEqual(E.left(new Error('set')))
+            },
+          ),
+        )
+      })
     })
 
     describe('endSession', () => {
@@ -200,6 +274,42 @@ describe('hyper-ts-session', () => {
 
             expect(actual).toStrictEqual(E.right([]))
           }),
+        )
+      })
+
+      test('when the session store errors', async () => {
+        await fc.assert(
+          fc.asyncProperty(
+            fc.tuple(fc.string(), fc.uuid()).chain(([secret, sessionId]) =>
+              fc.tuple(
+                fc.constant(secret),
+                fc.connection<HeadersOpen>({
+                  headers: fc.constant({ Cookie: `session=${cookieSignature.sign(sessionId, secret)}` }),
+                }),
+              ),
+            ),
+            async ([secret, connection]) => {
+              const store: Store<JsonRecord> = {
+                get() {
+                  throw 'get'
+                },
+                set() {
+                  throw 'set'
+                },
+                clear() {
+                  throw 'clear'
+                },
+                delete() {
+                  throw 'delete'
+                },
+              }
+              const sessionStore = new Keyv({ store })
+
+              const actual = await runMiddleware(_.endSession()({ secret, sessionStore }), connection)()
+
+              expect(actual).toStrictEqual(E.left(new Error('delete')))
+            },
+          ),
         )
       })
     })

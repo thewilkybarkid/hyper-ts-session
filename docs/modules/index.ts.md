@@ -30,7 +30,7 @@ Returns a middleware that ends the current session.
 **Signature**
 
 ```ts
-export declare function endSession(): ReaderMiddleware<SessionEnv, HeadersOpen, HeadersOpen, never, void>
+export declare function endSession(): ReaderMiddleware<SessionEnv, HeadersOpen, HeadersOpen, Error, void>
 ```
 
 Added in v0.1.2
@@ -42,7 +42,13 @@ Returns a middleware that returns the current session.
 **Signature**
 
 ```ts
-export declare function getSession<I = StatusOpen>(): ReaderMiddleware<SessionEnv, I, I, 'no-session', JsonRecord>
+export declare function getSession<I = StatusOpen>(): ReaderMiddleware<
+  SessionEnv,
+  I,
+  I,
+  'no-session' | Error,
+  JsonRecord
+>
 ```
 
 Added in v0.1.0
@@ -56,7 +62,7 @@ Returns a middleware that stores a value in a session.
 ```ts
 export declare function storeSession(
   session: JsonRecord
-): ReaderMiddleware<SessionEnv, HeadersOpen, HeadersOpen, never, void>
+): ReaderMiddleware<SessionEnv, HeadersOpen, HeadersOpen, Error, void>
 ```
 
 Added in v0.1.0
