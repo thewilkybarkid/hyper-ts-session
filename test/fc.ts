@@ -12,12 +12,23 @@ export const request = ({ headers }: { headers?: fc.Arbitrary<Headers> } = {}): 
       headers: headers ?? fc.constant({}),
       url: fc.webUrl(),
     })
-    .map(createRequest)
+    .map(args =>
+      Object.defineProperties(createRequest(args), { [fc.toStringMethod]: { value: () => fc.stringify(args) } }),
+    )
 
-export const response = (): fc.Arbitrary<Response> => fc.record({ req: request() }).map(createResponse)
+export const response = (): fc.Arbitrary<Response> =>
+  fc
+    .record({ req: request() })
+    .map(args =>
+      Object.defineProperties(createResponse(args), { [fc.toStringMethod]: { value: () => fc.stringify(args) } }),
+    )
 
 export const connection = <S = H.StatusOpen>(...args: Parameters<typeof request>): fc.Arbitrary<ExpressConnection<S>> =>
-  fc.tuple(request(...args), response()).map(args => new ExpressConnection(...args))
+  fc.tuple(request(...args), response()).map(args =>
+    Object.defineProperties(new ExpressConnection(...args), {
+      [fc.toStringMethod]: { value: () => fc.stringify(args[0]) },
+    }),
+  )
 
 export const cookie = (): fc.Arbitrary<string> =>
   fc.tuple(fc.lorem({ maxCount: 1 }), fc.lorem({ maxCount: 1 })).map(([name, value]) => `${name}=${value}`)
