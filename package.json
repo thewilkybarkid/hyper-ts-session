@@ -23,6 +23,7 @@
   "devDependencies": {
     "@commitlint/cli": "^17.0.0",
     "@commitlint/config-conventional": "^17.0.0",
+    "@fast-check/jest": "^1.6.0",
     "@trivago/prettier-plugin-sort-imports": "^3.2.0",
     "@tsconfig/recommended": "^1.0.1",
     "@types/cookie": "^0.5.1",
@@ -38,7 +39,6 @@
     "eslint-import-resolver-typescript": "^2.7.1",
     "eslint-plugin-import": "^2.26.0",
     "expect-type": "^0.13.0",
-    "fast-check": "^2.25.0",
     "fp-ts": "^2.12.1",
     "fp-ts-contrib": "^0.1.29",
     "husky": "^8.0.1",
