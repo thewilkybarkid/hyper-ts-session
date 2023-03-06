@@ -76,6 +76,7 @@ Added in v0.1.0
 ```ts
 export interface SessionEnv {
   secret: string
+  sessionCookie: string
   sessionStore: Keyv<JsonRecord>
 }
 ```

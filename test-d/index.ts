@@ -15,6 +15,7 @@ declare const jsonRecord: JsonRecord
 // SessionEnv
 //
 
+expectTypeOf(sessionEnv.sessionCookie).toEqualTypeOf<string>()
 expectTypeOf(sessionEnv.sessionStore).toEqualTypeOf<Keyv<JsonRecord>>()
 
 //

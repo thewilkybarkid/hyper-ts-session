@@ -32,6 +32,7 @@ import Uuid = UUID.Uuid
  */
 export interface SessionEnv {
   secret: string
+  sessionCookie: string
   sessionStore: Keyv<JsonRecord>
 }
 
@@ -80,9 +81,12 @@ export function storeSession(session: JsonRecord): ReaderMiddleware<SessionEnv, 
  */
 export function endSession(): ReaderMiddleware<SessionEnv, HeadersOpen, HeadersOpen, Error, void> {
   return pipe(
-    RM.clearCookie('session', {
-      httpOnly: true,
-    }),
+    RM.ask<SessionEnv, HeadersOpen>(),
+    RM.chain(({ sessionCookie }) =>
+      RM.clearCookie(sessionCookie ?? 'session', {
+        httpOnly: true,
+      }),
+    ),
     RM.chain(() => currentSessionId<HeadersOpen>()),
     RM.chainReaderTaskEitherKW(deleteSession),
     RM.orElseW(error => (error === 'no-session' ? RM.right(undefined) : RM.left(error))),
@@ -96,9 +100,9 @@ export function endSession(): ReaderMiddleware<SessionEnv, HeadersOpen, HeadersO
 function currentSessionId<I = StatusOpen>(): ReaderMiddleware<SessionEnv, I, I, 'no-session', Uuid> {
   return pipe(
     RM.ask<SessionEnv, I>(),
-    RM.chainMiddlewareK(({ secret }) =>
+    RM.chainMiddlewareK(({ sessionCookie, secret }) =>
       pipe(
-        getCookie<I>('session'),
+        getCookie<I>(sessionCookie),
         M.chainEitherKW(E.fromNullableK(() => 'no-session')(value => cookieSignature.unsign(value, secret) || null)),
         M.filterOrElseW(UUID.isUuid, () => 'no-session'),
         M.mapLeft(() => 'no-session'),
@@ -110,11 +114,11 @@ function currentSessionId<I = StatusOpen>(): ReaderMiddleware<SessionEnv, I, I, 
 function newSession(): ReaderMiddleware<SessionEnv, HeadersOpen, HeadersOpen, never, Uuid> {
   return pipe(
     RM.ask<SessionEnv, HeadersOpen>(),
-    RM.chainMiddlewareK(({ secret }) =>
+    RM.chainMiddlewareK(({ sessionCookie, secret }) =>
       pipe(
         M.rightIO<HeadersOpen, never, Uuid>(UUID.v4()),
         M.chainFirst(sessionId =>
-          M.cookie('session', cookieSignature.sign(sessionId, secret), {
+          M.cookie(sessionCookie, cookieSignature.sign(sessionId, secret), {
             httpOnly: true,
           }),
         ),

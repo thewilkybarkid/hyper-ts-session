@@ -30,5 +30,7 @@ export const connection = <S = H.StatusOpen>(...args: Parameters<typeof request>
     }),
   )
 
+export const cookieName = (): fc.Arbitrary<string> => fc.lorem({ maxCount: 1 })
+
 export const cookie = (): fc.Arbitrary<string> =>
-  fc.tuple(fc.lorem({ maxCount: 1 }), fc.lorem({ maxCount: 1 })).map(([name, value]) => `${name}=${value}`)
+  fc.tuple(cookieName(), fc.lorem({ maxCount: 1 })).map(([name, value]) => `${name}=${value}`)
