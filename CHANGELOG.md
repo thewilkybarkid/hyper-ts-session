@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.3.0](https://github.com/thewilkybarkid/hyper-ts-session/compare/v0.2.0...v0.3.0) (2023-03-06)
+
+
+### Features
+
+* allow the cookie name to be changed ([be3344c](https://github.com/thewilkybarkid/hyper-ts-session/commit/be3344c86e900170278d4a7ba0a1b37c423cd161))
+
 ## [0.2.0](https://github.com/thewilkybarkid/hyper-ts-session/compare/v0.1.3...v0.2.0) (2023-01-17)
 
 

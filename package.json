@@ -1,7 +1,7 @@
 {
   "name": "hyper-ts-session",
   "description": "hyper-ts middleware for sessions.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "license": "MIT",
   "homepage": "https://github.com/thewilkybarkid/hyper-ts-session",
   "repository": "github:thewilkybarkid/hyper-ts-session",
