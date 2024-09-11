@@ -77,7 +77,7 @@ Added in v0.1.0
 export interface SessionEnv {
   secret: string
   sessionCookie: string
-  sessionStore: Keyv<JsonRecord>
+  sessionStore: Keyv
 }
 ```
 

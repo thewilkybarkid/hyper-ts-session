@@ -2,10 +2,9 @@ import { test } from '@fast-check/jest'
 import { describe, expect, jest } from '@jest/globals'
 import cookieSignature from 'cookie-signature'
 import * as E from 'fp-ts/Either'
-import { JsonRecord } from 'fp-ts/Json'
 import { HeadersOpen } from 'hyper-ts'
 import * as M from 'hyper-ts/lib/Middleware'
-import Keyv, { Store } from 'keyv'
+import Keyv, { KeyvStoreAdapter } from 'keyv'
 import * as _ from '../src'
 import * as fc from './fc'
 import { runMiddleware } from './middleware'
@@ -95,7 +94,7 @@ describe('constructors', () => {
         ),
       ),
     ])('when the session store errors', async ([secret, sessionCookie, connection]) => {
-      const store: Store<JsonRecord> = {
+      const store: KeyvStoreAdapter = {
         get() {
           throw 'get'
         },
@@ -108,6 +107,10 @@ describe('constructors', () => {
         delete() {
           throw 'delete'
         },
+        on() {
+          return this
+        },
+        opts: undefined,
       }
       const sessionStore = new Keyv({ store })
 
@@ -183,7 +186,7 @@ describe('constructors', () => {
         ),
       ),
     ])('when there the session store errors', async ([secret, sessionCookie, connection, value]) => {
-      const store: Store<JsonRecord> = {
+      const store: KeyvStoreAdapter = {
         get() {
           throw 'get'
         },
@@ -196,6 +199,10 @@ describe('constructors', () => {
         delete() {
           throw 'delete'
         },
+        on() {
+          return this
+        },
+        opts: undefined,
       }
       const sessionStore = new Keyv({ store })
 
@@ -260,7 +267,7 @@ describe('constructors', () => {
         ),
       ),
     ])('when the session store errors', async ([secret, sessionCookie, connection]) => {
-      const store: Store<JsonRecord> = {
+      const store: KeyvStoreAdapter = {
         get() {
           throw 'get'
         },
@@ -273,6 +280,10 @@ describe('constructors', () => {
         delete() {
           throw 'delete'
         },
+        on() {
+          return this
+        },
+        opts: undefined,
       }
       const sessionStore = new Keyv({ store })
 

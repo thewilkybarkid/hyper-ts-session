@@ -33,7 +33,7 @@ import Uuid = UUID.Uuid
 export interface SessionEnv {
   secret: string
   sessionCookie: string
-  sessionStore: Keyv<JsonRecord>
+  sessionStore: Keyv
 }
 
 // -------------------------------------------------------------------------------------
